@@ -39,6 +39,7 @@ eventEmitter.on('list complete', function() {
     // copies imageJFX dependencies to the main directory
     copyDependencies(imageJFXDependenciesOnly, pathToImageJFXDependencies, dependenciesDirectory);
     execSync('cp ' + pathToImageJFX + ' .');
+    // Writes the ImageJFX db.xml.gz file
     writeXMLFile(dependenciesDirectory, finalDatabase);
     console.log ('Done');
 });
