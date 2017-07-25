@@ -27,12 +27,12 @@ var imageJFXDependenciesOnly = new Set();
 var imageJDone = false;
 var imageJFXDone = false;
 
-getImageJDependencies(imageJDependencies, pathToImageJDependencies);
-getImageJFXDependencies(imageJFXDependencies, pathToImageJFXDependencies);
+getImageJDependencies(imageJDependencies, pathToImageJDependencies, () =>  eventEmitter.emit('dependencies got'));
+getImageJFXDependencies(imageJFXDependencies, pathToImageJFXDependencies, () => eventEmitter.emit('dependencies got'));
 
 eventEmitter.on('dependencies got', function() {
     if (imageJDone && imageJFXDone)
-	getImageJFXDependenciesOnly(imageJFXDependenciesOnly);
+	getImageJFXDependenciesOnly(imageJFXDependenciesOnly, () => eventEmitter.emit('list complete'));
 });
 
 eventEmitter.on('list complete', function() {
@@ -50,8 +50,9 @@ eventEmitter.on('list complete', function() {
  * Emits a 'dependencies got' event when it is done.
  * @param {Array} array - The array to contain the dependencies
  * @param {String} source - url of ImageJ's db.xml.gz file. 
+ * @param {Function} callback - the event to emit when the task is done 
  */
-function getImageJDependencies (array ,source) {
+function getImageJDependencies (array ,source, callback) {
 
     // We fetch the db.xml.gz file from the ImageJ update site and unzip it
     var db = request(source).pipe(zlib.createGunzip()).pipe(fs.createWriteStream('tmp'));
@@ -68,7 +69,7 @@ function getImageJDependencies (array ,source) {
 	rd.on('close', function(){
 	    fs.unlinkSync('tmp');
 	    imageJDone = true;
-	    eventEmitter.emit('dependencies got');
+	    callback();
 	});
 
     });
@@ -80,8 +81,9 @@ function getImageJDependencies (array ,source) {
  * Emits a 'dependencies got' event when it is done.
  * @param {Array} array - the array to contain ImageJFXDependencies
  * @param {String} source - path to assembly's dependencies directory.
+ * @param {Function} callback - the event to emit when the task is done 
  */
-function getImageJFXDependencies(array, source) {
+function getImageJFXDependencies(array, source, callback) {
     var script = spawn(assemblyScript);
     script.stdout.on ('data', (data) => process.stdout.write(data.toString()) );
     script.stderr.on('data',  (data) =>  process.stderr.write(data.toString()) );
@@ -91,7 +93,7 @@ function getImageJFXDependencies(array, source) {
 		array.push(file);
 	    });
 	    imageJFXDone = true;
-	    eventEmitter.emit('dependencies got');
+	    callback();
 	});
     });
 }
@@ -100,12 +102,13 @@ function getImageJFXDependencies(array, source) {
 /**
  * Extracts the dependencies which are only imageJFX dependencies
  * @param {Set} dest - the set to contain imageJFX dependencies only
+ * @param {Function} callback - the event to emit when the task is done 
  */
-function getImageJFXDependenciesOnly (dest) {
+function getImageJFXDependenciesOnly (dest, callback) {
     // The regex to find the extension and the version number of a dependency.
     var extension = new RegExp(/(\-[\d\.]+)|(\-v[\d\.]+)((-beta-[\d\.]+))*(-*[a-zA-Z0-9]*)*.jar$/);
     getDifferencesWithoutExtension (dest, imageJFXDependencies, imageJDependencies, extension);
-    eventEmitter.emit('list complete');
+    callback();
 }
 
 
