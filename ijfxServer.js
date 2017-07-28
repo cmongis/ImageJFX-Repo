@@ -1,3 +1,4 @@
+'use strict';
 var http = require ('http');
 var request = require('request');
 var spawn = require ('child_process').spawn;

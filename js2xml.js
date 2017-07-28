@@ -1,3 +1,4 @@
+'use strict';
 var exec = require ('child_process').execSync;
 var parser = require ("jsontoxml");
 
@@ -52,3 +53,4 @@ module.exports = {
     }
 
 }
+
