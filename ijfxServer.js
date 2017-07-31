@@ -1,3 +1,4 @@
+'use strict';
 var http = require ('http');
 var request = require('request');
 var spawn = require ('child_process').spawn;
@@ -50,7 +51,11 @@ eventEmitter.on('list complete', function() {
  * Emits a 'dependencies got' event when it is done.
  * @param {Array} array - The array to contain the dependencies
  * @param {String} source - url of ImageJ's db.xml.gz file. 
+<<<<<<< HEAD
  * @param {Function} callback - the event to call when  the task is done.
+=======
+ * @param {Function} callback - the event to emit when the task is done 
+>>>>>>> b227b00f0f2dd185def5c76ee9e606da97b90527
  */
 function getImageJDependencies (array ,source, callback) {
 
@@ -81,7 +86,11 @@ function getImageJDependencies (array ,source, callback) {
  * Emits a 'dependencies got' event when it is done.
  * @param {Array} array - the array to contain ImageJFXDependencies
  * @param {String} source - path to assembly's dependencies directory.
+<<<<<<< HEAD
  * @param {Function} callback - the event to call when  the task is done.
+=======
+ * @param {Function} callback - the event to emit when the task is done 
+>>>>>>> b227b00f0f2dd185def5c76ee9e606da97b90527
  */
 function getImageJFXDependencies(array, source, callback) {
     var script = spawn(assemblyScript);
@@ -102,7 +111,11 @@ function getImageJFXDependencies(array, source, callback) {
 /**
  * Extracts the dependencies which are only imageJFX dependencies
  * @param {Set} dest - the set to contain imageJFX dependencies only
+<<<<<<< HEAD
  * @param {Function} callback - the event to call when  the task is done.
+=======
+ * @param {Function} callback - the event to emit when the task is done 
+>>>>>>> b227b00f0f2dd185def5c76ee9e606da97b90527
  */
 function getImageJFXDependenciesOnly (dest, callback) {
     // The regex to find the extension and the version number of a dependency.
