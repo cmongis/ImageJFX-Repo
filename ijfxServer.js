@@ -5,13 +5,14 @@ var config = require("./config");
 
 var app = express();
 
-app.use("/jars", express.static(__dirname + "/lib"));
+app.use("/jars", express.static(__dirname + "/public/lib"));
 app.use("/", express.static(__dirname + "/public"));
 
 app.get("/update", function (request, response) {
     var update = require("./serverUtils.js");
     update(function(statusCode){
 	response.sendStatus(statusCode);
+	console.log("updating done.");
     });
 });
 

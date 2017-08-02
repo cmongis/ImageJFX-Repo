@@ -1,12 +1,12 @@
-var request = require('request');
-var spawn = require ('child_process').spawn;
-var execSync = require ('child_process').execSync; 
-var fs = require ('fs');
-var zlib = require ('zlib');
-var readline = require('readline');
-var events = require('events');
+var request = require("request");
+var spawn = require ("child_process").spawn;
+var execSync = require ("child_process").execSync; 
+var fs = require ("fs");
+var zlib = require ("zlib");
+var readline = require("readline");
+var events = require("events");
 var eventEmitter = new events.EventEmitter();
-var js2xml = require('./js2xml.js');
+var js2xml = require("./js2xml.js");
 var config = require("./config.js");
 
 
@@ -24,50 +24,49 @@ var imageJFXDone = false;
 module.exports = function (callback) {
 
     if (! fs.existsSync("public"))
-	execSync('mkdir ' + "public");
+	execSync("mkdir " + "public");
     
-    getImageJDependencies(imageJDependencies, config.pathToImageJDependencies, () => eventEmitter.emit('dependencies got'));
-    getImageJFXDependencies(imageJFXDependencies, config.pathToImageJFXDependencies, () => eventEmitter.emit('dependencies got'));
+    getImageJDependencies(imageJDependencies, config.pathToImageJDependencies, () => eventEmitter.emit("dependencies got"));
+    getImageJFXDependencies(imageJFXDependencies, config.pathToImageJFXDependencies, () => eventEmitter.emit("dependencies got"));
 
-    eventEmitter.on('dependencies got', function() {
+    eventEmitter.on("dependencies got", function() {
 	if (imageJDone && imageJFXDone)
-	    getImageJFXDependenciesOnly(imageJFXDependenciesOnly, () => eventEmitter.emit('list complete'));
+	    getImageJFXDependenciesOnly(imageJFXDependenciesOnly, () => eventEmitter.emit("list complete"));
     });
 
-    eventEmitter.on('list complete', function() {
+    eventEmitter.on("list complete", function() {
 	// copies imageJFX dependencies to the main directory
 	copyDependencies(imageJFXDependenciesOnly, config.pathToImageJFXDependencies, config.dependenciesDirectory);
-	execSync('cp ' + config.pathToImageJFX + ' ./public');
+	execSync("cp " + config.pathToImageJFX + " ./public");
 	// Writes the ImageJFX db.xml.gz file
 	writeXMLFile(config.dependenciesDirectory, config.finalDatabase);
-	console.log ('Done');
 	return callback(200);
     });
 };
 /**
  * Gets the db.xml file from ImageJ update website.
  * Pushes ImageJ dependencies (without version and extension) into the ImageJDependencies array
- * Emits a 'dependencies got' event when it is done.
+ * Emits a "dependencies got" event when it is done.
  * @param {Array} array - The array to contain the dependencies
- * @param {String} source - url of ImageJ's db.xml.gz file. 
+ * @param {String} source - url of ImageJ"s db.xml.gz file. 
  * @param {Function} callback - the event to emit when the task is done 
  */
 function getImageJDependencies (array ,source, callback) {
 
     // We fetch the db.xml.gz file from the ImageJ update site and unzip it
-    var db = request(source).pipe(zlib.createGunzip()).pipe(fs.createWriteStream('tmp'));
-    db.on('finish', function () {
+    var db = request(source).pipe(zlib.createGunzip()).pipe(fs.createWriteStream("tmp"));
+    db.on("finish", function () {
 	var rd = readline.createInterface({
-    	    input: fs.createReadStream('tmp'),
+    	    input: fs.createReadStream("tmp"),
 	});
-	rd.on('line', function(line){
+	rd.on("line", function(line){
 	    if (regex.test(line)){
 		var tmp = regex.exec(line)[0];
-		array.push(tmp.substring(tmp.search('/') + 1));
+		array.push(tmp.substring(tmp.search("/") + 1));
 	    }
 	});
-	rd.on('close', function(){
-	    fs.unlinkSync('tmp');
+	rd.on("close", function(){
+	    fs.unlinkSync("tmp");
 	    imageJDone = true;
 	    callback();
 	});
@@ -78,16 +77,16 @@ function getImageJDependencies (array ,source, callback) {
 /**
  * Launches the assembly script.
  * Pushes ImageJFX dependencies into an array. 
- * Emits a 'dependencies got' event when it is done.
+ * Emits a "dependencies got" event when it is done.
  * @param {Array} array - the array to contain ImageJFXDependencies
- * @param {String} source - path to assembly's dependencies directory.
+ * @param {String} source - path to assembly"s dependencies directory.
  * @param {Function} callback - the event to emit when the task is done 
  */
 function getImageJFXDependencies(array, source, callback) {
     var script = spawn(config.assemblyScript);
-    script.stdout.on ('data', (data) => process.stdout.write(data.toString()) );
-    script.stderr.on('data',  (data) =>  process.stderr.write(data.toString()) );
-    script.on('exit', function (code) {
+    script.stdout.on ("data", (data) => process.stdout.write(data.toString()) );
+    script.stderr.on("data",  (data) =>  process.stderr.write(data.toString()) );
+    script.on("exit", function (code) {
 	fs.readdir (source, function (err, files) {
 	    files.forEach( function (file) {
 		array.push(file);
@@ -146,8 +145,8 @@ function writeXMLFile(from, to) {
     });
 
     fs.writeFileSync(to,js2xml.parse(js2xml.pluginRecords));
-    fs.createReadStream(to).pipe(zlib.createGzip()).pipe(fs.createWriteStream(to + '.gz'))
-	.on('close', function () {
+    fs.createReadStream(to).pipe(zlib.createGzip()).pipe(fs.createWriteStream(to + ".gz"))
+	.on("close", function () {
 	    fs.unlinkSync(to);
 	});
 };
@@ -156,13 +155,13 @@ function writeXMLFile(from, to) {
  * Copies some files from a directory to an other, using an array to filter which files to copy
  * @param {Array} filter - The array used to filter.
  * @param {String} from - The source directory
- * @param {String} to - The target directory (without '/')
+ * @param {String} to - The target directory (without "/")
  */
 function copyDependencies (filter, from,to) {
     if (! fs.existsSync(to))
-	execSync('mkdir ' + to);
+	execSync("mkdir " + to);
     filter.forEach( function (dependency) {
-	execSync('cp ' + from + dependency + ' ' + to);
+	execSync("cp " + from + dependency + " " + to);
     });
 };
 
