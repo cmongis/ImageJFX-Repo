@@ -1,3 +1,4 @@
+"use strict";
 var request = require("request");
 var spawn = require ("child_process").spawn;
 var execSync = require ("child_process").execSync; 

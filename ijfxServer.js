@@ -1,4 +1,4 @@
-'use strict';
+"use strict";
 var http = require ("http");
 var express = require("express");
 var config = require("./config");
@@ -15,6 +15,13 @@ app.get("/update", function (request, response) {
 	console.log("updating done.");
     });
 });
+
+app.use(function(req, res, next){
+    res.setHeader("Content-Type", "text/plain");
+    res.status(404).send("The page you are asking for does not exist");
+
+});
+
 
 console.log("The server is listening on: " + config.port);
 app.listen(config.port);
