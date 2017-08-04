@@ -5,8 +5,12 @@ var config = require("./config");
 
 var app = express();
 
-app.use("/jars", express.static(__dirname + "/public/lib"));
-app.use("/", express.static(__dirname + "/public"));
+// app.use("/jars", express.static(__dirname + "/public/lib"));
+// app.use("/", express.static(__dirname + "/public"));
+
+// app.use(express.static(__dirname + "/jars"));
+app.use(express.static(__dirname + "/"));
+
 
 app.get("/update", function (request, response) {
     var update = require("./serverUtils.js");
