@@ -11,9 +11,6 @@ var js2xml = require("./js2xml.js");
 var config = require("./config.js");
 
 
-// The regex to find plugin names from the ImageJ Dependencies file
-var regex = new RegExp (/plugin filename="jars\/([\_A-Za-z\-]+)([\d\.]*)(.*)\.jar/);
-
 var imageJDependencies = [];
 var imageJFXDependencies = [];
 
@@ -54,6 +51,8 @@ module.exports = function (callback) {
  */
 function getImageJDependencies (array ,source, callback) {
 
+    // The regex to find plugin names from the ImageJ Dependencies file
+    var regex = new RegExp (/plugin filename="jars\/([\_A-Za-z\-]+)([\d\.]*)(.*)\.jar/);
     // We fetch the db.xml.gz file from the ImageJ update site and unzip it
     var db = request(source).pipe(zlib.createGunzip()).pipe(fs.createWriteStream("tmp"));
     db.on("finish", function () {
@@ -146,10 +145,15 @@ function writeXMLFile(from, to) {
     });
 
     fs.writeFileSync(to,js2xml.parse(js2xml.pluginRecords));
+
+    appendAtTheTop(to, config.doctype);
+    //We are gzipping the db.xml
     fs.createReadStream(to).pipe(zlib.createGzip()).pipe(fs.createWriteStream(to + ".gz"))
-	.on("close", function () {
-	    fs.unlinkSync(to);
-	});
+    	.on("close", function () {
+    	    fs.unlinkSync(to);
+    	});
+
+    
 };
 
 /**
@@ -166,3 +170,15 @@ function copyDependencies (filter, from,to) {
     });
 };
 
+/**
+ * Appends some text at the beginning of a file
+ * @param {String} file - the path to the file to append to
+ * @param {String} text - the text to append
+ */
+function appendAtTheTop (file, text) {
+    var data = fs.readFileSync(file).toString().split("\n");
+    data.splice(0,0, text);
+    var text = data.join("\n");
+
+    fs.writeFileSync(file, text);
+};
