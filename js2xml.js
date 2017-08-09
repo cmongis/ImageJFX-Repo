@@ -1,7 +1,7 @@
 "use strict";
 var exec = require ("child_process").execSync;
 var parser = require ("jsontoxml");
-var fs = require("fs"); //Load the filesystem module
+var fs = require("fs"); 
 module.exports = {
     
     pluginRecords : {pluginRecords : [] },
