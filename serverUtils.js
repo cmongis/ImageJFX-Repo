@@ -35,7 +35,7 @@ module.exports = function (callback) {
     eventEmitter.on("list complete", function() {
 	// copies imageJFX dependencies to the main directory
 	copyDependencies(imageJFXDependenciesOnly, config.pathToImageJFXDependencies, config.dependenciesDirectory);
-	execSync("cp " + config.pathToImageJFX + " ./public");
+	execSync("cp " + config.pathToImageJFX + " .");
 	// Writes the ImageJFX db.xml.gz file
 	writeXMLFile(config.dependenciesDirectory, config.finalDatabase);
 	return callback(200);

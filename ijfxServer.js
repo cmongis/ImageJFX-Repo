@@ -8,7 +8,7 @@ var app = express();
 // app.use("/jars", express.static(__dirname + "/public/lib"));
 // app.use("/", express.static(__dirname + "/public"));
 
-// app.use(express.static(__dirname + "/jars"));
+app.use(express.static(__dirname + "/jars"));
 app.use(express.static(__dirname + "/"));
 
 
