@@ -1,7 +1,7 @@
 "use strict";
 var exec = require ("child_process").execSync;
 var parser = require ("jsontoxml");
-var fs = require("fs"); 
+var fs = require("fs"); //Load the filesystem module
 module.exports = {
     
     pluginRecords : {pluginRecords : [] },
@@ -45,14 +45,16 @@ module.exports = {
     },
 
     performChecksum : function (_filename) {
-	var cmd = "md5sum " + _filename;
+	var cmd = "java SHA1 " + _filename;
+	
 	var res = exec(cmd).toString();
-	return res.substring(0, res.indexOf(" "));
+	return res.substring(0, res.length - 1);
+	return res;
     },
 
     parse : function () {
 	return parser(this.pluginRecords);
     }
-
+    
 }
 

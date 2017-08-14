@@ -144,6 +144,7 @@ function writeXMLFile(from, to) {
 	js2xml.addPlugin(from + dependency);
     });
 
+    js2xml.addPlugin(config.imageJFXCore);
     fs.writeFileSync(to,js2xml.parse(js2xml.pluginRecords));
 
     appendAtTheTop(to, config.doctype);
