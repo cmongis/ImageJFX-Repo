@@ -30,7 +30,7 @@ app.get("/db.xml.gz", function(req, res) {
 app.use(express.static(__dirname + "/"));
 
 app.get("/update", function (request, response) {
-    var update = require("./serverUtils.js");
+    var update = require("./updater");
     update(function(statusCode){
 	response.sendStatus(statusCode);
 	console.log("updating done.");
