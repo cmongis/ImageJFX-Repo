@@ -12,6 +12,20 @@ var exec = require ("child_process").execSync;
 app.engine("handlebars", exphbs({defaultLayout: "main"}));
 app.set("view engine", "handlebars");
 
+app.get("/", function(request, response) {
+    fs.readdir(__dirname, function(err, files) {
+	var ijfxJars = {};
+	ijfxJars.filenames = files
+	    .filter(function(file) { return /imagejfx-core-.*\.jar/.test(file)
+				   }).map(function(file) {
+				       return {filename: file};
+				   });
+
+	ijfxJars.db = "db.xml.gz";
+	response.render("homepage", ijfxJars);
+    });
+});
+
 app.get("/jars", function(request, response) {
     fs.readdir(__dirname + "/jars", function(err, files) {
 	if (err){console.log(err);}
@@ -28,26 +42,25 @@ app.get("/jars", function(request, response) {
 app.get("/jars/:jarName", function(request, response) {
     
     var name = request.params.jarName;
-    if (name.indexOf('-') > -1 )
+    if (! name.endsWith(".jar"))
 	var jarName = name.substring(0, name.lastIndexOf('-'));
     else
 	var jarName = name;
     response.sendFile(__dirname + "/jars/" + jarName);
 });
 
-app.get("/imagejfx-core-*jar*", function(request, response) {
-    var name = request.params.exec;
-    var reg = /imagejfx-core-/;
-    if (reg.test(name))
-	name = name.substring(0, name.lastIndexOf('-'));
-    response.sendFile(__dirname + "/" + name);
+app.get("/:file", function(request, response) {
+    var filename = request.params.file;
+    if (/imagejfx-core-.*jar.*/.test(filename)) {
+	if (! filename.endsWith("jar")) 
+	    filename = filename.substring(0, filename.lastIndexOf('-'));
+	response.sendFile(__dirname + "/" + filename);
+    }
+    else if (filename === "db.xml.gz") 
+	response.sendFile(__dirname + "/" + filename);
+    else
+	response.sendStatus(404);
 });
-
-app.get("/db.xml.gz", function(request, response) {
-    response.sendFile(__dirname + "/db.xml.gz");
-});
-
-
 
 app.get("/update", function (request, response) {
     var update = require("./updater");
@@ -59,7 +72,7 @@ app.get("/update", function (request, response) {
     });
 });
 
-
+//serving the client-side files
 app.use(express.static(path.join(__dirname, "public")));
 
 // app.use(function(request, response, next){
