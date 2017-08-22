@@ -106,6 +106,6 @@ public class SHA1 {
 	try{
 	    System.out.println(getJarDigest(args[0]));
 	}
-	catch(Exception e){}
+	catch(Exception e){System.out.println(e);}
     }
 }
