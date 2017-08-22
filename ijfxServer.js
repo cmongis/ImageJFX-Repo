@@ -28,9 +28,9 @@ app.get("/", function(request, response) {
 app.get("/update", function (request, response) {
     var update = require("./updater");
     update(function(statusCode){
-	response.sendStatus(statusCode);
-
-
+	var data = fs.readFileSync("data.json");
+	data = JSON.parse(data);
+	response.send(new Date(data.lastTimeBuilt));
 	console.log("updating done.");
     });
 });
@@ -40,6 +40,7 @@ app.get("/jars", function(request, response) {
 
     fs.readFile(config.data, function(err, data) {
 	var json = JSON.parse(data);
+	json = json.jars;
 	var list = [];
 	for (var file in json) {
 	    var files = {};
@@ -51,16 +52,6 @@ app.get("/jars", function(request, response) {
 	response.render("jars", jars);
     });
 });
-//     fs.readdir(__dirname + "/jars", function(err, files) {
-// 	if (err){console.log(err);}
-// 	else {
-// 	    files = files.map(function(file) {
-// 		return {filename: file, checksum: check};
-// 	    });
-// 	    var jars = { prop: files};
-// 	    response.render("jars", jars);}
-//     });
-// });
 
 app.get("/jars/:jarName", function(request, response) {
     
