@@ -1,2 +1,6 @@
 node_modules/
 imagejfx-core/
+*.class
+jars/
+db.xml.gz
+imagejfx-core*

@@ -4,6 +4,8 @@ var parser = require ("jsontoxml");
 var fs = require("fs"); //Load the filesystem module
 module.exports = {
     
+    checksums: {},
+    
     pluginRecords : {pluginRecords : [] },
 
     // A plugin has a name and a list of previous versions, including the current one.
@@ -44,11 +46,11 @@ module.exports = {
 	return new Date(new Date().getTime() - new Date().getTimezoneOffset()*60*1000).toISOString().substr(0,19).replace(/[\-T:]/g,"");
     },
 
-    performChecksum : function (_filename) {
-	var cmd = "java SHA1 " + _filename;
-	
+    performChecksum : function (filename) {
+	var cmd = "java SHA1 " + filename;
 	var res = exec(cmd).toString();
-	return res.substring(0, res.length - 1);
+	res = res.substring(0, res.length - 1);
+	this.checksums[filename] = res;
 	return res;
     },
 
@@ -56,5 +58,7 @@ module.exports = {
 	return parser(this.pluginRecords);
     }
     
+
+
 }
 

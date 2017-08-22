@@ -152,9 +152,8 @@ function writeXMLFile(from, to) {
     fs.createReadStream(to).pipe(zlib.createGzip()).pipe(fs.createWriteStream(to + ".gz"))
     	.on("close", function () {
     	    fs.unlinkSync(to);
-    	});
-
-    
+	    fs.writeFileSync("data.json", JSON.stringify(js2xml.checksums));
+	});
 };
 
 /**

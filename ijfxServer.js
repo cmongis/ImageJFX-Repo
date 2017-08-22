@@ -8,7 +8,6 @@ var exphbs = require("express-handlebars");
 var fs = require("fs");
 var exec = require ("child_process").execSync;
 
-
 app.engine("handlebars", exphbs({defaultLayout: "main"}));
 app.set("view engine", "handlebars");
 
@@ -26,18 +25,42 @@ app.get("/", function(request, response) {
     });
 });
 
-app.get("/jars", function(request, response) {
-    fs.readdir(__dirname + "/jars", function(err, files) {
-	if (err){console.log(err);}
-	else {
-	    files = files.map(function(file) {
-		var check = exec("java SHA1 " + __dirname + "/jars/" + file).toString();
-		return {filename: file, checksum: check};
-	    });
-	    var jars = { prop: files};
-	    response.render("jars", jars);}
+app.get("/update", function (request, response) {
+    var update = require("./updater");
+    update(function(statusCode){
+	response.sendStatus(statusCode);
+
+
+	console.log("updating done.");
     });
 });
+
+
+app.get("/jars", function(request, response) {
+
+    fs.readFile(config.data, function(err, data) {
+	var json = JSON.parse(data);
+	var list = [];
+	for (var file in json) {
+	    var files = {};
+	    files.filename = file.substring(5);
+	    files.checksum = json[file];
+	    list.push(files);
+	}
+	var jars = {prop: list};
+	response.render("jars", jars);
+    });
+});
+//     fs.readdir(__dirname + "/jars", function(err, files) {
+// 	if (err){console.log(err);}
+// 	else {
+// 	    files = files.map(function(file) {
+// 		return {filename: file, checksum: check};
+// 	    });
+// 	    var jars = { prop: files};
+// 	    response.render("jars", jars);}
+//     });
+// });
 
 app.get("/jars/:jarName", function(request, response) {
     
@@ -62,15 +85,6 @@ app.get("/:file", function(request, response) {
 	response.sendStatus(404);
 });
 
-app.get("/update", function (request, response) {
-    var update = require("./updater");
-    update(function(statusCode){
-	response.sendStatus(statusCode);
-
-
-	console.log("updating done.");
-    });
-});
 
 //serving the client-side files
 app.use(express.static(path.join(__dirname, "public")));
