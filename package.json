@@ -4,7 +4,14 @@
   "description": "",
   "main": "ijfxServer.js",
   "dependencies": {
-    "express": "^4.15.3"
+    "adm-zip": "^0.4.7",
+    "express": "^4.15.3",
+    "express-handlebars": "^3.0.0",
+    "js2xmlparser": "^3.0.0",
+    "jsontoxml": "0.0.11",
+    "line-reader": "^0.4.0",
+    "regex": "^0.1.1",
+    "request": "^2.81.0"
   },
   "devDependencies": {},
   "scripts": {
