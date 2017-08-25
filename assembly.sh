@@ -9,4 +9,4 @@ git reset --hard origin/master
 
 echo "<br>Deleting libraries"
 rm -Rfv target/*
-mvn -e assembly:assembly || exit;
+mvn -e assembly:assembly || mvn3 -e assembly:assembly || exit;
