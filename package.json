@@ -11,7 +11,8 @@
     "jsontoxml": "0.0.11",
     "line-reader": "^0.4.0",
     "regex": "^0.1.1",
-    "request": "^2.81.0"
+    "request": "^2.81.0",
+    "seq": "^0.3.5"
   },
   "devDependencies": {},
   "scripts": {
