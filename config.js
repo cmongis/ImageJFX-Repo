@@ -2,7 +2,7 @@ module.exports = {
 
     finalDatabase : 'db.xml',
     pathToImageJDependencies : 'http://update.imagej.net/db.xml.gz',
-    pathToImageJFXDependencies : 'imagejfx-core/target/imagejfx-core-1.1-bin/imagejfx-core-1.1/lib/',
+    pathToImageJFXDependencies : 'imagejfx-core/target/imagejfx-core-1.1-bin/lib/',
     pathToImageJFX : 'imagejfx-core/target/imagejfx-core-1.1-bin/imagejfx-core-1.1/imagejfx-core-1.1.jar',
     dependenciesDirectory : 'jars/',
     assemblyScript : './assembly.sh',
