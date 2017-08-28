@@ -28,7 +28,7 @@ module.exports = {
     getRemote: function (source, callback) {
         var array = [];
         // The regex to find plugin names from the ImageJ Dependencies file
-        var regex = new RegExp(/plugin filename="jars\/([\_A-Za-z\-]+)([\d\.]*)(.*)\.jar/);
+        var regex = /plugin filename="jars\/([\_A-Za-z\-]+)([\d\.]*)(.*)\.jar.*<version.*<\/plugin>//s;
         // We fetch the db.xml.gz file from the ImageJ update site and unzip it
         var db = request(source).pipe(zlib.createGunzip()).pipe(fs.createWriteStream("tmp"));
         
@@ -64,7 +64,7 @@ module.exports = {
     getLocal: function (source, callback) {
         fs.readdir(source, callback);
     }
-
+    
     ,
     diff: function (arr1, arr2, pattern, callback) {
 

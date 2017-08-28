@@ -26,7 +26,6 @@ module.exports = function (callback) {
     
     getImageJDependencies(imageJDependencies, config.pathToImageJDependencies, () => eventEmitter.emit("dependencies got"));
     getImageJFXDependencies(imageJFXDependencies, config.pathToImageJFXDependencies, () => eventEmitter.emit("dependencies got"));
-
     eventEmitter.on("dependencies got", function() {
 	if (imageJDone && imageJFXDone)
 	    getImageJFXDependenciesOnly(imageJFXDependenciesOnly, () => eventEmitter.emit("list complete"));
@@ -52,20 +51,16 @@ module.exports = function (callback) {
 function getImageJDependencies (array ,source, callback) {
 
     // The regex to find plugin names from the ImageJ Dependencies file
-    var regex = new RegExp (/plugin filename="jars\/([\_A-Za-z\-]+)([\d\.]*)(.*)\.jar/);
+    var regex =/plugin filename="jars\/([\_A-Za-z\-]+)([\d\.]*)(.*)\.jar">[\n\s.*]*<version/g;
+
     // We fetch the db.xml.gz file from the ImageJ update site and unzip it
     var db = request(source).pipe(zlib.createGunzip()).pipe(fs.createWriteStream("tmp"));
     db.on("finish", function () {
-	var rd = readline.createInterface({
-    	    input: fs.createReadStream("tmp"),
-	});
-	rd.on("line", function(line){
-	    if (regex.test(line)){
-		var tmp = regex.exec(line)[0];
-		array.push(tmp.substring(tmp.search("/") + 1));
-	    }
-	});
-	rd.on("close", function(){
+	fs.readFile("tmp", function(err, data) {
+	    var jars = data.toString().match(regex);
+	    jars = jars.map(function(jar) {
+		return jar.substring(jar.search("/") + 1, jar.search('>') - 1);
+	    });
 	    fs.unlinkSync("tmp");
 	    imageJDone = true;
 	    callback();
@@ -187,3 +182,10 @@ function appendAtTheTop (file, text) {
 
     fs.writeFileSync(file, text);
 };
+
+function getLocal (array, source) {
+    fs.readdir(source, function(err, files) {
+	files.forEach ( function (file) {
+	    array.push(file)});
+    });
+}
