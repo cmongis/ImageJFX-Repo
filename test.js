@@ -24,8 +24,9 @@ Seq()
         })
         // we copy the file to the destination
         .seq(function(remote,local) {           
-            var toCopy = updater.compare(remote,local);       
-            toCopy(from,)
+            var toCopy = updater.compare(remote,local);
+            console.log(toCopy);
+            updater.copyList(config.pathToImageJDependencies,toCopy,config.dependenciesDirectory);
         })
         
         ;

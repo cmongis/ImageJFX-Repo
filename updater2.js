@@ -76,6 +76,7 @@ module.exports = {
 
             var ext = jarname.match(extension)[0];
             var basename = jarname.substr(0, jarname.indexOf(ext));
+            console.log(basename,ext);
             return {
                 basename: basename,
                 extension: ext
@@ -96,7 +97,7 @@ module.exports = {
 
                 });
 
-
+        //local.forEach(console.log);
         var toJar = function (datastr) {
             return datastr.basename + datastr.extension + "jar";
         }
@@ -104,11 +105,12 @@ module.exports = {
         return result.map(toJar);
 
     }
-    , copyDependencies: function (filter, from, to) {
+    , copyList: function (listFile, from, to) {
         if (!fs.existsSync(to))
             execSync("mkdir " + to);
-        filter.forEach(function (dependency) {
-            execSync("cp " + from + dependency + " " + to);
+        listFile.forEach(function (dependency) {
+            var cmd = "cp " + from + dependency + " " + to;
+            execSync(cmd);
         });
     }
 };
