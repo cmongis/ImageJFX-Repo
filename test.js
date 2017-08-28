@@ -18,16 +18,24 @@ Seq()
         .par(function (array) {
             updater.getLocal(__dirname + "/" + config.pathToImageJFXDependencies, this);
         })
+        
+        
         // in case of error, we just print it
         .catch(function (err) {
             console.log(err);
         })
         // we copy the file to the destination
-        .seq(function(remote,local) {           
+        .seq(function(remote,local) {
+            
+            
+            console.log(JSON.stringify(remote.pluginRecords.plugin,null,4));
+            
+           /*
             var toCopy = updater.compare(remote,local);
             console.log(toCopy);
             updater.copyList(config.pathToImageJDependencies,toCopy,config.dependenciesDirectory);
-        })
+            */
+            })
         
         ;
 

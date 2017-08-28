@@ -15,6 +15,10 @@ var events = require("events");
 var eventEmitter = new events.EventEmitter();
 var js2xml = require("./js2xml.js");
 var config = require("./config.js");
+var xml2js = require("xml2js");
+var StringBuilder = require("string-builder");
+
+
 
 var extension = new RegExp(/(\-[\d\.]+)|(\-v[\d\.]+)((-beta-[\d\.]+))*(-*[a-zA-Z0-9]*)*.jar$/);
 
@@ -27,11 +31,17 @@ module.exports = {
         var regex = new RegExp(/plugin filename="jars\/([\_A-Za-z\-]+)([\d\.]*)(.*)\.jar/);
         // We fetch the db.xml.gz file from the ImageJ update site and unzip it
         var db = request(source).pipe(zlib.createGunzip()).pipe(fs.createWriteStream("tmp"));
+        
+        var xml = new StringBuilder();
+        
         db.on("finish", function () {
             var rd = readline.createInterface({
                 input: fs.createReadStream("tmp"),
             });
             rd.on("line", function (line) {
+                
+                xml.append(line);
+                
                 if (regex.test(line)) {
                     var tmp = regex.exec(line)[0];
                     array.push(tmp.substring(tmp.search("/") + 1));
@@ -39,7 +49,13 @@ module.exports = {
             });
             rd.on("close", function () {
                 fs.unlinkSync("tmp");
-                callback(null, array);
+                
+                xml2js.parseString(xml,function(err,result) {
+                    
+                    callback(err,result);
+                    
+                });
+                
             });
 
         });
