@@ -1,6 +1,13 @@
+<h3>Jar list</h3>
 <table class="table">
+
+    <tr>
+<th>JAR NAME</th> <th>CHECKSUM</th></tr>
+   
   {{#each filenames}}
-    <tr><td><a href="/{{filename}}" download>{{filename}}</a></td>
+    <tr>
+        <td><a href="/{{filename}}" download>{{filename}}</a></td>
+        <td>{{checksum}}</td>
     </tr>
   {{/each}}
   <tr><td><a href="/{{db}}" download>{{db}}</a></td></tr>
