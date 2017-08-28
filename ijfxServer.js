@@ -26,11 +26,12 @@ app.get("/", function(request, response) {
 });
 
 app.get("/update", function (request, response) {
+
     var update = require("./updater");
     update(function(statusCode){
 	var data = fs.readFileSync("data.json");
 	data = JSON.parse(data);
-	response.send(new Date(data.lastTimeBuilt));
+	response.send(new Date(data.lastTimeBuilt).toISOString());
 	console.log("updating done.");
     });
 });
