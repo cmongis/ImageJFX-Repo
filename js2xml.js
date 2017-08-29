@@ -48,6 +48,7 @@ module.exports = {
 
     performChecksum : function (filename) {
 	var cmd = "java SHA1 " + filename;
+        console.log(cmd);
 	var res = exec(cmd).toString();
 	res = res.substring(0, res.length - 1);
 	this.checksums[filename] = res;
