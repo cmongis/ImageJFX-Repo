@@ -20,15 +20,29 @@ var StringBuilder = require("string-builder");
 
 
 
-var extension = new RegExp(/(\-[\d\.]+)|(\-v[\d\.]+)((-beta-[\d\.]+))*(-*[a-zA-Z0-9]*)*.jar$/);
+var extension = new RegExp(/(\-v?[\d\.]+)|(\-v[\d\.]+)|(\-r\d+)((-beta-[\d\.]+))*(-*[a-zA-Z0-9]*)*.jar$/);
 
+var extension2 = /-(r?v?\d.*)\.jar/;
+
+/**
+ * Appends some text at the beginning of a file
+ * @param {String} file - the path to the file to append to
+ * @param {String} text - the text to append
+ */
+function appendAtTheTop (file, text) {
+    var data = fs.readFileSync(file).toString().split("\n");
+    data.splice(0,0, text);
+    var text = data.join("\n");
+
+    fs.writeFileSync(file, text);
+};
 
 module.exports = {
 
     getRemote: function (source, callback) {
         var array = [];
         // The regex to find plugin names from the ImageJ Dependencies file
-        var regex = /plugin filename="jars\/([\_A-Za-z\-]+)([\d\.]*)(.*)\.jar.*<version.*<\/plugin>//s;
+        var regex = /plugin filename="jars\/([\_A-Za-z\-]+)([\d\.]*)(.*)\.jar.*<version.*<\/plugin>/;
         // We fetch the db.xml.gz file from the ImageJ update site and unzip it
         var db = request(source).pipe(zlib.createGunzip()).pipe(fs.createWriteStream("tmp"));
         
@@ -41,17 +55,35 @@ module.exports = {
             rd.on("line", function (line) {
                 
                 xml.append(line);
-                
+                /*
                 if (regex.test(line)) {
                     var tmp = regex.exec(line)[0];
                     array.push(tmp.substring(tmp.search("/") + 1));
-                }
+                }*/
             });
             rd.on("close", function () {
                 fs.unlinkSync("tmp");
                 
                 xml2js.parseString(xml,function(err,result) {
-                    
+                    //console.log(JSON.stringify(result,null,3));
+                    result = result
+                            .pluginRecords
+                            .plugin
+                            .filter(function(item) {
+                                
+                                
+                                return item.version != undefined && item.version.length > 0;
+                            })
+                            .map(function(item) {
+                        
+                        return item.$.filename;
+                    })
+                            .filter(function(item) {
+                                return item.indexOf("jars/") == 0
+                    })
+                            .map(function(item) {
+                                return item.replace("jars/","")
+                            });
                     callback(err,result);
                     
                 });
@@ -90,7 +122,15 @@ module.exports = {
         var toJSON = function (jarname) {
 
 
-            var ext = jarname.match(extension)[0];
+            var m = jarname.match(extension2);
+            var ext;
+            if(m == null) {
+                console.log("Couldn't match "+jarname);
+                ext = ".jar";
+            }
+            else {
+                ext = m[0];
+            }
             var basename = jarname.substr(0, jarname.indexOf(ext));
             console.log(basename,ext);
             return {
@@ -115,7 +155,7 @@ module.exports = {
 
         //local.forEach(console.log);
         var toJar = function (datastr) {
-            return datastr.basename + datastr.extension + "jar";
+            return datastr.basename + datastr.extension;
         }
 
         return result.map(toJar);
@@ -126,7 +166,26 @@ module.exports = {
             execSync("mkdir " + to);
         listFile.forEach(function (dependency) {
             var cmd = "cp " + from + dependency + " " + to;
+            console.log(cmd);
             execSync(cmd);
         });
-    }
+    },
+    writeXMLFile: function(base,list, to, callback) {
+    list.forEach(function(dependency) {
+	js2xml.addPlugin(base + dependency);
+    });
+    fs.writeFileSync(to,js2xml.parse(js2xml.pluginRecords));
+    appendAtTheTop(to, config.doctype);
+    //We are gzipping the db.xml
+    fs.createReadStream(to).pipe(zlib.createGzip()).pipe(fs.createWriteStream(to + ".gz"))
+    	.on("close", function () {
+    	    fs.unlinkSync(to);
+	    var data = {};
+	    data.jars = js2xml.checksums;
+	    data.lastTimeBuilt = Date.now();
+	    fs.writeFileSync(config.data, JSON.stringify(data));
+	    callback();
+            console.log(to,"written.");
+	});
+}
 };
