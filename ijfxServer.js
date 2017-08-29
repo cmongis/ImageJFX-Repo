@@ -29,10 +29,9 @@ app.get("/update", function (request, response) {
 
     var update = require("./updater");
     update(function(statusCode){
-	var data = fs.readFileSync("data.json");
+	var data = fs.readFileSync(config.data);
 	data = JSON.parse(data);
-	response.send(new Date(data.lastTimeBuilt).toISOString());
-	console.log("updating done.");
+	response.status(statusCode).send(new Date(data.lastTimeBuilt).toISOString());
     });
 });
 

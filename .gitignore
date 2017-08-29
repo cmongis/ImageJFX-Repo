@@ -5,3 +5,4 @@ jars/
 db.xml.gz
 imagejfx-core*
 /nbproject/private/
+data.json

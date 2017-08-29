@@ -18,6 +18,8 @@ var imageJFXDependenciesOnly = new Set();
 
 var imageJDone = false;
 var imageJFXDone = false;
+var statusCode = 200;
+
 
 module.exports = function (callback) {
 
@@ -36,9 +38,13 @@ module.exports = function (callback) {
 	copyDependencies(imageJFXDependenciesOnly, config.pathToImageJFXDependencies, config.dependenciesDirectory);
 	//execSync("cp " + config.pathToImageJFX + " .");
 	// Writes the ImageJFX db.xml.gz file
-	writeXMLFile(config.dependenciesDirectory, config.finalDatabase);
-	return callback(200);
+	writeXMLFile(config.dependenciesDirectory, config.finalDatabase, () => eventEmitter.emit("db.xml.gz produced"));
     });
+
+    eventEmitter.on("db.xml.gz produced", function() {
+	return callback(statusCode);
+    });
+		   
 };
 /**
  * Gets the db.xml file from ImageJ update website.
@@ -52,11 +58,14 @@ function getImageJDependencies (array ,source, callback) {
 
     // The regex to find plugin names from the ImageJ Dependencies file
     var regex =/plugin filename="jars\/([\_A-Za-z\-]+)([\d\.]*)(.*)\.jar">[\n\s.*]*<version/g;
-
     // We fetch the db.xml.gz file from the ImageJ update site and unzip it
     var db = request(source).pipe(zlib.createGunzip()).pipe(fs.createWriteStream("tmp"));
     db.on("finish", function () {
 	fs.readFile("tmp", function(err, data) {
+	    if (err) {
+		console.log(err);
+		statusCode = 500;
+	    }
 	    var jars = data.toString().match(regex);
 	    jars = jars.map(function(jar) {
 		return jar.substring(jar.search("/") + 1, jar.search('>') - 1);
@@ -82,6 +91,11 @@ function getImageJFXDependencies(array, source, callback) {
     script.stdout.on ("data", (data) => process.stdout.write(data.toString()) );
     script.stderr.on("data",  (data) =>  process.stderr.write(data.toString()) );
     script.on("exit", function (code) {
+	if (code != 0) {
+	    statusCode = 500;
+	    console.log("Server error during assembly");
+	}
+	console.log("exit code: " + code);
 	fs.readdir (source, function (err, files) {
             if(files != null) {
 	    files.forEach( function (file) {
@@ -136,14 +150,13 @@ function getDifferencesWithoutExtension(dest, arr1, arr2, pattern) {
  * @param {String} from - the directory containing the dependencies
  * @param {String} to - the name of the uncompressed file to produce
  */
-function writeXMLFile(from, to) {
+function writeXMLFile(from, to, callback) {
     imageJFXDependenciesOnly.forEach(function(dependency) {
 	js2xml.addPlugin(from + dependency);
     });
 
     js2xml.addPlugin(config.imageJFXCore);
     fs.writeFileSync(to,js2xml.parse(js2xml.pluginRecords));
-
     appendAtTheTop(to, config.doctype);
     //We are gzipping the db.xml
     fs.createReadStream(to).pipe(zlib.createGzip()).pipe(fs.createWriteStream(to + ".gz"))
@@ -152,7 +165,8 @@ function writeXMLFile(from, to) {
 	    var data = {};
 	    data.jars = js2xml.checksums;
 	    data.lastTimeBuilt = Date.now();
-	    fs.writeFileSync("data.json", JSON.stringify(data));
+	    fs.writeFileSync(config.data, JSON.stringify(data));
+	    callback();
 	});
 };
 
