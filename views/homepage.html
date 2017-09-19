@@ -1,0 +1,29 @@
+<h3>File list</h3>
+<table class="table">
+
+    <tr>
+        <th>FILE NAME</th> <th>CHECKSUM</th></tr>
+
+    {{#each filenames}}
+    <tr>
+        <td><a href="/{{url}}" download>{{filename}}</a></td>
+        <td>{{checksum}}</td>
+    </tr>
+    {{/each}}
+</table>
+
+
+<h3>Rebuild</h3>
+
+<form class="form-inline">
+
+    <label class="sr-only" for="inlineFormInputGroup">Password</label>
+    <div class="input-group mb-2 mr-sm-2 mb-sm-0">
+        <div class="input-group-addon">@</div>
+        <input id="password" type="password" class="form-control" id="inlineFormInputGroup" placeholder="Password for">
+    </div>
+    <button type="button" id="buildButton" onclick="build()" class="btn btn-primary">Build</button>
+    <br>
+    
+</form>
+<div id="time"><p>Last build : {{lastBuild}}</p></div>
