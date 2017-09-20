@@ -19,6 +19,6 @@ repo    .read(function(db) {
         
         //console.log(repo.getId("jars/ijfx-core-1.1.jar"));
         //console.log(repo.getPlugin("imagejfx-core"));
-        //repo.checkCurrentJars();
-        repo.write();
+        repo.checkCurrentJars(repo.write);
+        //repo.write();
 });
