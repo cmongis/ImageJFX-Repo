@@ -14,7 +14,9 @@ var spawn = require("child_process").spawn;
 
 var Repository = require("./repository.js");
 
-var repo = new Repository(__dirname);
+var repo = new Repository(config.repo);
+var fspath = require("./path.js");
+
 
 module.exports = function (callback, progress) {
     var response = {
@@ -29,16 +31,11 @@ module.exports = function (callback, progress) {
 
     Seq()
             // executing the assembly script that will build the object
+            // and clean the repository
             .seq(function () {
-                //exec("bash assembly.sh", this);
-
-                //this();
-                //return;
 
 
-
-
-                var cmd = spawn("bash", ["assembly.sh"])
+                var cmd = spawn("bash", ["assembly.sh", config.repo]);
 
                 var displayOutput = function (output) {
                     progress(output.toString());
@@ -60,52 +57,21 @@ module.exports = function (callback, progress) {
             .catch(function (err, output) {
                 callback(err, output);
             })
-            .seq(function (err, stdout, stderr) {
-                response.stdout = stdout;
-                response.stderr = stderr;
-
-                exec("bash rm jars/*");
-
-                this();
-            })
-            // first we get the list of jars of the remote
-            //.par(function () {
-            //    updater.getRemote(config.pathToImageJDependencies, this);
-            //})
-            // then we the the list of jars that was compiled
             .seq(function () {
-                updater.getLocal(__dirname + "/" + config.pathToImageJFXDependencies, this);
+                repo.read(this);
             })
-            // in case of error, we just print it
+            .seq(function () {
+                repo.checkCurrentJars(this);
+            })
+            .seq(function () {
+                repo.write(this);
+            })
             .catch(function (err) {
-                console.log(err);
                 callback(err);
             })
-            // we copy the file to the destination
-            .seq(function (local) {
-
-
-
-                // we filter the local list of jar to contain only jars
-                local = local.filter(function (item) {
-
-                    return item.indexOf(".jar") != -1;
-
-                });
-
-                //var toCopy = updater.compare(remote, local);
-                var toCopy = local;
-                updater.copyList(toCopy, config.pathToImageJFXDependencies, config.dependenciesDirectory);
-
-                this();
-
-            })
-            .seq(repo.read)
-            .seq(repo.checkCurrentJars)
-            .seq(repo.write)
             .seq(function () {
                 console.log("Build success");
-                callback(undefined);
+                callback();
             })
             ;
 
