@@ -13,7 +13,20 @@ var xml2js = require("xml2js");
 var fs = require("fs");
 var Seq = require("seq");
 var zlib = require("zlib");
-var repo = new Repository("./", "./jars");
+var fspath = require("./path.js");
+
+console.log(fspath("/foo","bar"));
+console.log(fspath("/foo/","/bar"));
+console.log(fspath("/foo","/bar","hello.txt"));
+console.log(fspath("/foo","bar","/hello.txt"));
+
+
+var updater = require("./updater2.js");
+updater(function() {
+    console.log("it works");
+});
+
+/*
 repo    .read(function(db) {
         
         
@@ -21,4 +34,4 @@ repo    .read(function(db) {
         //console.log(repo.getPlugin("imagejfx-core"));
         repo.checkCurrentJars(repo.write);
         //repo.write();
-});
+});*/
