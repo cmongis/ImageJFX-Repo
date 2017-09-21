@@ -267,7 +267,7 @@ function Repository(dir, jarFolder) {
                             filename: path("jars", filename)
                             , checksum: checksum
                             , timestamp: now
-                            , filesize: fs.lstatSync(path("jars", filename)).size
+                            , filesize: fs.lstatSync(path(config.repo,"jars", filename)).size
                         });
 
                     }
