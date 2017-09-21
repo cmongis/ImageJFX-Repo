@@ -180,11 +180,5 @@ app.get("/:file", function (request, response) {
 //serving the client-side files
 app.use(express.static(path.join(__dirname, "public")));
 
-// app.use(function(request, response, next){
-//     response.setHeader("Content-Type", "text/plain");
-//     response.status(404).send("The page you are asking for does not exist");
-
-// });
-
 console.log("The server is listening on: " + config.port);
 app.listen(config.port);
