@@ -6,11 +6,62 @@ var path = require("path");
 var app = express();
 var exphbs = require("express-handlebars");
 var fs = require("fs");
-var exec = require("child_process").execSync;
+var execSync = require("child_process").execSync;
+var log = require("color-log");
+
+var exec = function (cmd) {
+    log.mark(cmd);
+    console.log(execSync(cmd));
+}
 var bodyParser = require("body-parser");
 var Seq = require("seq");
 
 var updater = require("./updater2.js");
+
+
+var fspath = require("./path.js");
+
+console.log("Test java...");
+try {
+    exec("java -version");
+    exec("javac -version")
+} catch (e) {
+    console.log("Error: java not present");
+    process.exit(2);
+}
+log.info("Java [OK]");
+
+log.info("Testing SHA");
+
+
+try {
+    if (fs.existsSync("SHA1.class") == false) {
+        console.log("Compiling SHA1...");
+        console.log(exec("javac " + fspath(__dirname, "SHA1.java")).toString());
+        console.log("Compilation succesful");
+
+    }
+} catch (e) {
+    lor.error("Error when compiling");
+    process.exit(2);
+}
+console.log("SHA ready.");
+
+try {
+    console.log("Testing repo");
+
+    console.log("Making sure directory exists", config.repo);
+    exec("mkdir -p " + fspath(config.repo));
+
+
+
+} catch (e) {
+    console.log("Error when creating repository");
+
+}
+
+
+console.log("Starting server");
 
 app.engine("html", exphbs({defaultLayout: "main", extname: ".html"}));
 app.set("view engine", "html");
@@ -22,17 +73,21 @@ app.get("/", function (request, response) {
     new Seq()
             // let's read the file of the jar directory
 
-            .par(function () {
-                fs.readdir(__dirname + "/jars", this);
+            .seq(function () {
+                fs.readdir(fspath(config.repo, "jars"), this);
             })
-            // now the file containing all the checksums
-            .par(function () {
-                fs.readFile(config.data, this);
+            .catch(function (err) {
+                
+                
+               
+                
             })
             // finally we render the page
-            .seq(function (jars, json) {
+            .seq(function (jars) {
 
-                json = JSON.parse(json);
+                if(jars == undefined) {
+                    jars = [];
+                }
 
                 var files = [{
                         filename: "db.xml.gz"
@@ -44,10 +99,10 @@ app.get("/", function (request, response) {
                 jars = jars
 
                         .map(function (f) {
-                            console.log(json["jars/" + f]);
+
                             return {
                                 filename: f
-                                , checksum: json.jars["jars/" + f]
+                                , checksum: "Unvailable"
                                 , url: "jars/" + f
                             };
 
@@ -56,34 +111,20 @@ app.get("/", function (request, response) {
                             return d.checksum != undefined;
 
                         });
-
                 files.push.apply(files, jars);
                 response.render("homepage", {
                     filenames: files
                     , db: "db.xml.gz"
                 });
             });
-    /*
-     fs.readdir(__dirname, function (err, files) {
-     var ijfxJars = {};
-     ijfxJars.filenames = files
-     .filter(function (file) {
-     return /imagejfx-core-.*\.jar/.test(file)
-     }).map(function (file) {
-     return {filename: file};
-     });
-     
-     ijfxJars.db = "db.xml.gz";
-     response.render("homepage", ijfxJars);
-     });*/
 });
 
 app.post("/update", function (request, response) {
 
     console.log(request.body);
-    
-    
-    
+
+
+
     if (request.body.password != config.pwd) {
 
 
@@ -99,8 +140,6 @@ app.post("/update", function (request, response) {
 
 
         if (err == undefined || err == null) {
-            var data = fs.readFileSync(config.data);
-            data = JSON.parse(data);
             response
                     .status(200)
                     .send(new Date(data.lastTimeBuilt).toISOString());
@@ -114,33 +153,7 @@ app.post("/update", function (request, response) {
 
     });
 
-    /*
-     update(function (statusCode) {
-     var data = fs.readFileSync(config.data);
-     data = JSON.parse(data);
-     response.status(statusCode).send(new Date(data.lastTimeBuilt).toISOString());
-     });*/
 
-
-
-});
-
-
-app.get("/jars", function (request, response) {
-
-    fs.readFile(config.data, function (err, data) {
-        var json = JSON.parse(data);
-        json = json.jars;
-        var list = [];
-        for (var file in json) {
-            var files = {};
-            files.filename = file.substring(5);
-            files.checksum = json[file];
-            list.push(files);
-        }
-        var jars = {prop: list};
-        response.render("jars", jars);
-    });
 });
 
 app.get("/jars/:jarName", function (request, response) {
@@ -150,19 +163,17 @@ app.get("/jars/:jarName", function (request, response) {
         var jarName = name.substring(0, name.lastIndexOf('-'));
     else
         var jarName = name;
-    response.sendFile(__dirname + "/jars/" + jarName);
+    response.sendFile(fspath(config.repo, "jars/", jarName));
 });
 
 app.get("/:file", function (request, response) {
+
     var filename = request.params.file;
-    if (/imagejfx-core-.*jar.*/.test(filename)) {
-        if (!filename.endsWith("jar"))
-            filename = filename.substring(0, filename.lastIndexOf('-'));
-        response.sendFile(__dirname + "/" + filename);
-    } else if (filename === "db.xml.gz")
-        response.sendFile(__dirname + "/" + filename);
-    else
+    if (fs.existsSync(fspath(config.repo, filename))) {
+        response.sendFile(fspath(config.repo, filename))
+    } else {
         response.sendStatus(404);
+    }
 });
 
 
