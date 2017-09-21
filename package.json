@@ -6,10 +6,12 @@
   "dependencies": {
     "adm-zip": "^0.4.7",
     "body-parser": "^1.18.1",
+    "color-log": "0.0.2",
     "dateformat": "^3.0.0",
     "express": "^4.15.3",
     "express-form-data": "^2.0.0",
     "express-handlebars": "^3.0.0",
+    "flightplan": "^0.6.17",
     "js2xmlparser": "^3.0.0",
     "jsontoxml": "0.0.11",
     "line-reader": "^0.4.0",
