@@ -14,6 +14,8 @@ var config = require("./config.js");
 var extension2 = /-(r?v?\d.*)\.jar/;
 var dateformat = require("dateformat");
 
+var path = require("./path.js");
+
 function Repository(dir, jarFolder) {
 
     var self = this;
@@ -21,20 +23,22 @@ function Repository(dir, jarFolder) {
 
 
     self.dir = dir;
-    if(jarFolder == undefined) {
-        jarFolder == self.path(dir,"jars");
+    if (jarFolder == undefined) {
+        jarFolder = path(dir, "jars");
     }
+
+
     self.jarFolder = jarFolder;
 
-    self.dbFile = dir + "/" + "db.xml.gz";
+    self.dbFile = path(dir, "db.xml.gz");
 
     self.db;
 
 
-    self.now = function() {
-       
-       return dateformat(new Date(),"yyyymmHHMMss");
-        
+    self.now = function () {
+
+        return dateformat(new Date(), "yyyymmHHMMss");
+
     };
 
     // read current database file
@@ -58,14 +62,20 @@ function Repository(dir, jarFolder) {
                         var buffer = [];
                         var cb = this;
                         fs
-                                .createReadStream("db.xml.gz")
+                                .createReadStream(self.dbFile)
                                 .pipe(gzip)
                                 .on("data", function (data) {
                                     buffer.push(data.toString());
                                 })
                                 .on("end", function () {
                                     cb(null, buffer.join(""));
+                                })
+                                .on("error", function (err) {
+                                    cb(err);
                                 });
+                    })
+                    .catch(function (err) {
+                        callback(err)
                     })
                     .seq(function (xml) {
                         xml2js.parseString(xml, this);
@@ -81,55 +91,50 @@ function Repository(dir, jarFolder) {
     self.write = function (cb) {
 
         try {
-            
+
             console.log("Writing db.xml.gz");
-            
-            
+
+
             var builder = new xml2js.Builder();
             var xml = builder.buildObject(self.db);
             var cdata = config.doctype;
-            
+
             // creating the output stream
-            var output = fs.createWriteStream("db.xml.gz");
+            var output = fs.createWriteStream(path(config.repo, "db.xml.gz"));
             var compress = zlib.createGzip();
             compress.pipe(output);
-            
-            
+
+
             var begin = "<pluginRecords>";
-            
+
             // deleting the header of the XML
-            xml = xml.substring(xml.indexOf(begin),xml.length);
-            
+            xml = xml.substring(xml.indexOf(begin), xml.length);
+
             // writing the compressed output
-           
+
             compress.write(cdata);
             compress.write("\n");
             compress.write(xml);
             compress.end();
-      
+
 
             // writing an uncompressed output for debug reasons
-            var output2 = fs.createWriteStream("db.xml");
+            var output2 = fs.createWriteStream(path(config.repo, "db.xml"));
             output2.write(cdata);
             output2.write("\n");
             output2.write(xml);
             output2.end();
-            
+
             console.log("db.xml.gz written.");
-            
+
             cb(null);
         } catch (e) {
-            if(cb != undefined)
-            cb(e);
+            if (cb != undefined)
+                cb(e);
         }
     };
 
-    self.path = function (folder, filename) {
-        if (folder.lastIndexOf("/") != filename.length - 1) {
-            folder = folder + "/";
-        }
-        return folder + filename;
-    }
+
 
     self.getPlugin = function (filename) {
 
@@ -155,21 +160,21 @@ function Repository(dir, jarFolder) {
 
 
         // creating a entry for the old version (must respect the XML format)
-        var oldVersion = {$:self.getVersion(plugin)};
-        
+        var oldVersion = {$: self.getVersion(plugin)};
+
         // creates the entry in the data tree if doesn't exists
         if (plugin[PREVIOUS_VERSION] == undefined) {
             plugin[PREVIOUS_VERSION] = [];
         }
         plugin[PREVIOUS_VERSION].push(oldVersion);
-        
+
         // if the current the parameter is null
         // it means the jar is not used anymore
         // it's deleted from the tree
         if (version == undefined) {
             delete plugin.version
         }
-        
+
         // otherwise, the new version of the jar
         // is set as default
         else {
@@ -177,7 +182,7 @@ function Repository(dir, jarFolder) {
             plugin.version = [version];
         }
     };
-    
+
     /**
      * Returns the current version of the jara
      * @param {type} plugin
@@ -196,16 +201,16 @@ function Repository(dir, jarFolder) {
      * @param {type} filename
      * @returns {unresolved}
      */
-    self.getCheckSum = function (filename) {      
+    self.getCheckSum = function (filename) {
         return self.getVersion(self.getPlugin(filename)).checksum;
     };
 
     /**
      * checks the jars contained in the jar folder
-     * @param {type} cb : callback
+     * @param {type} callback : callback
      * @returns {undefined}
      */
-    self.checkCurrentJars = function (cb) {
+    self.checkCurrentJars = function (callback) {
 
         // read current directory with all files
         // get the checksum
@@ -217,51 +222,52 @@ function Repository(dir, jarFolder) {
 
         // array that will contain the detected jars
         var check = [];
-        
+
         // current timestamp
         var now = self.now();
-        
+
         // starting the sequence
         new Seq()
                 // reading the list of files in the jar directory
                 .seq(function () {
                     fs.readdir(self.jarFolder, this)
                 })
-                
+
                 // transform the resulted list in a sequence stack
                 .flatten()
 
                 // for each detected file in the jar folder
-                .parEach(2, function (f) {  
-                    var path = self.path(self.jarFolder, f);
-            
+                .parEach(2, function (f) {
+                    var p = path(self.jarFolder, f);
+
                     // calculating the checksum and storing it
-                    self.checksum(path, this.into(f));
+                    self.checksum(p, this.into(f));
                 })
                 // putting everyting back into one array
                 .unflatten()
                 .seq(function (result) {
-                    
+
                     // the checksum associated to the file is retrieved...
                     for (var i = 0; i != result.length; i++) {
                         var filename = result[i];
                         var checksum = this.vars[filename];
-                        
-                        if(filename.indexOf(".jar") == -1) continue;
-                        
+
+                        if (filename.indexOf(".jar") == -1)
+                            continue;
+
                         if (checksum == undefined) {
                             continue;
                         }
-                        
-                        
+
+
                         checksum = checksum.trim();
-                        
+
                         // ...and a new data structure is created
                         check.push({
-                            filename: self.path("jars",filename)
+                            filename: path("jars", filename)
                             , checksum: checksum
-                            ,timestamp:now
-                            ,filesize: fs.lstatSync(self.path("jars",filename)).size
+                            , timestamp: now
+                            , filesize: fs.lstatSync(path("jars", filename)).size
                         });
 
                     }
@@ -269,22 +275,22 @@ function Repository(dir, jarFolder) {
                     this(null, check);
                 })
                 .seq(function (check) {
-                    
+
                     // for each file in the list of created strucutre that
                     // that represent the current jar
                     for (file in check) {
-                        
+
                         file = check[file];
-                        
+
                         // checking if a different version of the
                         // jar already exists in the database
                         var record = self.getPlugin(file.filename);
-                        
+
                         // if not, a record is created
                         if (record == undefined) {
                             // create record
                             console.log("creating", file.filename);
-                            
+
                             self.db.pluginRecords.plugin.push({
                                 $: {
                                     filename: file.filename
@@ -298,7 +304,7 @@ function Repository(dir, jarFolder) {
                         // if a record with a different checksum exists,
                         // the old version is flagged as previous version
                         else if (self.getCheckSum(record) != file.checksum) {
-                           
+
                             console.log("updating", record.$.filename);
 
                             self.addVersion(file.filename, {
@@ -342,19 +348,19 @@ function Repository(dir, jarFolder) {
                                 return plugin.$.filename;
                             })
                             .forEach(function (plugin) {
-                                console.log("Deleting",plugin);
+                                console.log("Deleting", plugin);
                                 self.addVersion(plugin);
                             });
                     console.log("JAR check finished.");
-                    
-                    
-                    if(cb != undefined) {
-                        cb();
+
+
+                    if (callback != undefined) {
+                        callback();
                     }
                     this();
-                    
+
                 });
-                
+
         ;
     };
 
@@ -391,7 +397,4 @@ function Repository(dir, jarFolder) {
 
     };
 }
-
-
-
 module.exports = Repository;
