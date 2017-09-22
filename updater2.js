@@ -19,10 +19,6 @@ var fspath = require("./path.js");
 
 
 module.exports = function (callback, progress) {
-    var response = {
-        sdtout: ""
-        , stderr: ""
-    };
 
     if (progress == undefined) {
         progress = console.log;
