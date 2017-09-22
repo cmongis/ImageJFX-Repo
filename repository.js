@@ -13,7 +13,7 @@ var zlib = require("zlib");
 var config = require("./config.js");
 var extension2 = /-(r?v?\d.*)\.jar/;
 var dateformat = require("dateformat");
-
+var Hash = require("hashish");
 var path = require("./path.js");
 
 function Repository(dir, jarFolder) {
@@ -230,7 +230,7 @@ function Repository(dir, jarFolder) {
         new Seq()
                 // reading the list of files in the jar directory
                 .seq(function () {
-                    fs.readdir(self.jarFolder, this)
+                    fs.readdir(self.jarFolder, this);
                 })
 
                 // transform the resulted list in a sequence stack
@@ -243,14 +243,15 @@ function Repository(dir, jarFolder) {
                     // calculating the checksum and storing it
                     self.checksum(p, this.into(f));
                 })
-                // putting everyting back into one array
-                .unflatten()
-                .seq(function (result) {
+
+
+                .seq(function () {
+
+                    var result = this.vars;
 
                     // the checksum associated to the file is retrieved...
-                    for (var i = 0; i != result.length; i++) {
-                        var filename = result[i];
-                        var checksum = this.vars[filename];
+                    for (var filename in result) {
+                        var checksum = result[filename];
 
                         if (filename.indexOf(".jar") == -1)
                             continue;
@@ -267,13 +268,14 @@ function Repository(dir, jarFolder) {
                             filename: path("jars", filename)
                             , checksum: checksum
                             , timestamp: now
-                            , filesize: fs.lstatSync(path(config.repo,"jars", filename)).size
+                            , filesize: fs.lstatSync(path(config.repo, "jars", filename)).size
                         });
 
                     }
                     // let pass to the next 
                     this(null, check);
                 })
+
                 .seq(function (check) {
 
                     // for each file in the list of created strucutre that
@@ -354,14 +356,20 @@ function Repository(dir, jarFolder) {
                     console.log("JAR check finished.");
 
 
+                    this();
+
+                })
+                .empty()
+                .seq(function () {
+                    console.log("callback")
                     if (callback != undefined) {
                         callback();
                     }
-                    this();
-
-                });
+                })
+                .empty();
 
         ;
+        return;
     };
 
     self.getId = function (jarname) {
@@ -392,7 +400,13 @@ function Repository(dir, jarFolder) {
 
         exec(cmd, function (err, stdout) {
             console.log(cmd, "[executed]");
-            cb(err, stdout.toString());
+            if (err) {
+                console.log(filename, "[failed]");
+                cb();
+            } else {
+                console.log(filename, "[success]", stdout.toString());
+                cb(err, stdout.toString());
+            }
         });
 
     };
