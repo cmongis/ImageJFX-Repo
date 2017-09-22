@@ -74,5 +74,5 @@ module.exports = function (callback, progress) {
                 callback();
             })
             ;
-
+            return;
 };
