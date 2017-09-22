@@ -1,4 +1,3 @@
-"use strict";
 var http = require("http");
 var express = require("express");
 var config = require("./config");
@@ -77,15 +76,15 @@ app.get("/", function (request, response) {
                 fs.readdir(fspath(config.repo, "jars"), this);
             })
             .catch(function (err) {
-                
-                
-               
-                
+
+
+
+
             })
             // finally we render the page
             .seq(function (jars) {
 
-                if(jars == undefined) {
+                if (jars == undefined) {
                     jars = [];
                 }
 
@@ -139,16 +138,16 @@ app.post("/update", function (request, response) {
     updater(function (err, result) {
 
 
-        if (err == undefined || err == null) {
+        if (err) {
+            response
+                    .status(500)
+                    .send("Error when building");
+        } else {
+
             response
                     .status(200)
                     .send(new Date(data.lastTimeBuilt).toISOString());
 
-
-        } else {
-            response
-                    .status(500)
-                    .send("Error when building");
         }
 
     });
