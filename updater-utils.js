@@ -4,7 +4,6 @@
  * and open the template in the editor.
  */
 
-"use strict";
 var request = require("request");
 var execSync = require("child_process").execSync;
 var fs = require("fs");
